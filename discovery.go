@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Bryan Frimin <bryan@frimin.fr>.
+// Copyright (c) 2022 Exograd SAS.
 //
 // Permission to use, copy, modify, and/or distribute this software for
 // any purpose with or without fee is hereby granted, provided that the
@@ -117,4 +117,9 @@ type AuthorizationServerMetadata struct {
 	// (PKCE) code challenge methods supported by this authorization
 	// server.
 	CodeChallengeMethodsSupported []string `json:"code_challenge_methods_supported"`
+}
+
+func Discover(endpoint string) (*AuthorizationServerMetadata, error) {
+
+	return nil, nil
 }
