@@ -21,5 +21,5 @@ import (
 )
 
 type TokenRequest interface {
-	Encode() url.Values
+	Values() url.Values
 }

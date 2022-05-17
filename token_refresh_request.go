@@ -25,7 +25,7 @@ type TokenRefreshRequest struct {
 	Extra        map[string]string
 }
 
-func (t *TokenRefreshRequest) Encode() url.Values {
+func (t *TokenRefreshRequest) Values() url.Values {
 	var q url.Values
 
 	for k, v := range t.Extra {

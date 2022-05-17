@@ -27,7 +27,7 @@ type TokenCodeRequest struct {
 	Extra       map[string]string
 }
 
-func (t *TokenCodeRequest) Encode() url.Values {
+func (t *TokenCodeRequest) Values() url.Values {
 	var q url.Values
 
 	for k, v := range t.Extra {

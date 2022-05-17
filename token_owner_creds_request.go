@@ -28,7 +28,7 @@ type TokenOwnerCredsRequest struct {
 	Extra    map[string]string
 }
 
-func (t *TokenOwnerCredsRequest) Encode() url.Values {
+func (t *TokenOwnerCredsRequest) Values() url.Values {
 	var q url.Values
 
 	for k, v := range t.Extra {
