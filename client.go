@@ -19,6 +19,7 @@ package oauth2c
 import (
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 const (
@@ -181,4 +182,29 @@ func (c *Client) setDeviceAuthorizationEndpoint(s string) error {
 	}
 	c.DeviceAuthorizationEndpoint = u
 	return nil
+}
+
+func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) string {
+	var u url.URL
+	q := u.Query()
+
+	q.Set("client_id", c.Id)
+	q.Set("response_type", responseType)
+	q.Set("redirect_uri", r.RedirectURI)
+
+	if r.State != "" {
+		q.Set("state", r.State)
+	}
+
+	if len(r.Scope) > 0 {
+		q.Set("scope", strings.Join(r.Scope, " "))
+	}
+
+	for k, v := range r.Extra {
+		q.Set(k, v)
+	}
+
+	u.RawQuery = q.Encode()
+
+	return c.AuthorizationEndpoint.ResolveReference(&u).String()
 }

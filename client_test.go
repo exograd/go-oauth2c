@@ -18,6 +18,7 @@ package oauth2c
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -90,4 +91,31 @@ func TestNewClient(t *testing.T) {
 	assert.Error(err)
 	assert.Nil(client)
 	options.RevocationEndpoint = "/device"
+}
+
+func TestAuthorizaURL(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	client, err := NewClient(Issuer, ClientId, ClientSecret, &Options{})
+	require.NoError(err)
+
+	request := &AuthorizeRequest{}
+
+	u := client.AuthorizeURL(CodeResponseType, request)
+	assert.Equal("https://issuer.example.org/authorize?client_id=the-best-client-id&redirect_uri=&response_type=code", u)
+
+	u = client.AuthorizeURL(TokenResponseType, &AuthorizeRequest{})
+	assert.Equal("https://issuer.example.org/authorize?client_id=the-best-client-id&redirect_uri=&response_type=token", u)
+
+	request.State = "fff"
+	request.RedirectURI = "http://www.example.com/callback"
+	request.Scope = []string{"offline", "foo", "bar"}
+	request.Extra = map[string]string{
+		"foo": "bar",
+		"bar": "foo foo",
+	}
+	u = client.AuthorizeURL(CodeResponseType, request)
+	assert.Equal("https://issuer.example.org/authorize?bar=foo+foo&client_id=the-best-client-id&foo=bar&redirect_uri=http%3A%2F%2Fwww.example.com%2Fcallback&response_type=code&scope=offline+foo+bar&state=fff", u)
+
 }
