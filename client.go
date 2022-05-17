@@ -120,7 +120,7 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 	return &c, nil
 }
 
-func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) string {
+func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) *url.URL {
 	var u url.URL
 	q := u.Query()
 
@@ -142,7 +142,7 @@ func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) string {
 
 	u.RawQuery = q.Encode()
 
-	return c.AuthorizationEndpoint.ResolveReference(&u).String()
+	return c.AuthorizationEndpoint.ResolveReference(&u)
 }
 
 func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*TokenResponse, error) {

@@ -19,6 +19,7 @@ package oauth2c
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/url"
 	"testing"
 )
 
@@ -103,10 +104,20 @@ func TestAuthorizaURL(t *testing.T) {
 	request := &AuthorizeRequest{}
 
 	u := client.AuthorizeURL(CodeResponseType, request)
-	assert.Equal("https://issuer.example.org/authorize?client_id=the-best-client-id&redirect_uri=&response_type=code", u)
+	assert.Equal(&url.URL{
+		Scheme:   "https",
+		Host:     "issuer.example.org",
+		Path:     "/authorize",
+		RawQuery: "client_id=the-best-client-id&redirect_uri=&response_type=code",
+	}, u)
 
 	u = client.AuthorizeURL(TokenResponseType, &AuthorizeRequest{})
-	assert.Equal("https://issuer.example.org/authorize?client_id=the-best-client-id&redirect_uri=&response_type=token", u)
+	assert.Equal(&url.URL{
+		Scheme:   "https",
+		Host:     "issuer.example.org",
+		Path:     "/authorize",
+		RawQuery: "client_id=the-best-client-id&redirect_uri=&response_type=token",
+	}, u)
 
 	request.State = "fff"
 	request.RedirectURI = "http://www.example.com/callback"
@@ -116,6 +127,11 @@ func TestAuthorizaURL(t *testing.T) {
 		"bar": "foo foo",
 	}
 	u = client.AuthorizeURL(CodeResponseType, request)
-	assert.Equal("https://issuer.example.org/authorize?bar=foo+foo&client_id=the-best-client-id&foo=bar&redirect_uri=http%3A%2F%2Fwww.example.com%2Fcallback&response_type=code&scope=offline+foo+bar&state=fff", u)
+	assert.Equal(&url.URL{
+		Scheme:   "https",
+		Host:     "issuer.example.org",
+		Path:     "/authorize",
+		RawQuery: "bar=foo+foo&client_id=the-best-client-id&foo=bar&redirect_uri=http%3A%2F%2Fwww.example.com%2Fcallback&response_type=code&scope=offline+foo+bar&state=fff",
+	}, u)
 
 }
