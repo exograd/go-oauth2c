@@ -17,14 +17,24 @@
 package oauth2c
 
 import (
+	"bytes"
+	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"strings"
 )
 
 const (
-	CodeResponseType  = "code"
-	TokenResponseType = "token"
+	CodeResponseType           = "code"
+	TokenResponseType          = "token"
+	GrantTypeAuthorizationCode = "authorization_code"
+	GrantTypeImplicit          = "token"
+	GrantTypePasswordCreds     = "password"
+	GrantTypeClientCreds       = "client_credentials"
 )
 
 var (
@@ -45,6 +55,8 @@ type Client struct {
 	IntrospectionEndpoint       *url.URL
 	RevocationEndpoint          *url.URL
 	DeviceAuthorizationEndpoint *url.URL
+
+	conn *http.Client
 }
 
 type Options struct {
@@ -106,6 +118,73 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 	}
 
 	return &c, nil
+}
+
+func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) string {
+	var u url.URL
+	q := u.Query()
+
+	q.Set("client_id", c.Id)
+	q.Set("response_type", responseType)
+	q.Set("redirect_uri", r.RedirectURI)
+
+	if r.State != "" {
+		q.Set("state", r.State)
+	}
+
+	if len(r.Scope) > 0 {
+		q.Set("scope", strings.Join(r.Scope, " "))
+	}
+
+	for k, v := range r.Extra {
+		q.Set(k, v)
+	}
+
+	u.RawQuery = q.Encode()
+
+	return c.AuthorizationEndpoint.ResolveReference(&u).String()
+}
+
+func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*TokenResponse, error) {
+	values := r.Values()
+	values.Set("grant_type", grantType)
+
+	reqBody := bytes.NewBufferString(values.Encode())
+
+	req, err := http.NewRequestWithContext(ctx,
+		"POST", c.TokenEndpoint.String(),
+		reqBody)
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot create the request: %w",
+			err)
+	}
+
+	req.Header.Add("Authorization", "Basic "+c.basicToken())
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
+
+	resp, err := c.conn.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("cannot execute the request: %w",
+			err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read response body: %w",
+			err)
+	}
+
+	var tokenResponse TokenResponse
+	if err := json.Unmarshal(body, &tokenResponse); err != nil {
+		return nil, fmt.Errorf("cannot unmarshal token"+
+			" response: %w", err)
+	}
+
+	return &tokenResponse, nil
 }
 
 func (c *Client) setAuthorizationEndpoint(s string) error {
@@ -184,27 +263,7 @@ func (c *Client) setDeviceAuthorizationEndpoint(s string) error {
 	return nil
 }
 
-func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) string {
-	var u url.URL
-	q := u.Query()
-
-	q.Set("client_id", c.Id)
-	q.Set("response_type", responseType)
-	q.Set("redirect_uri", r.RedirectURI)
-
-	if r.State != "" {
-		q.Set("state", r.State)
-	}
-
-	if len(r.Scope) > 0 {
-		q.Set("scope", strings.Join(r.Scope, " "))
-	}
-
-	for k, v := range r.Extra {
-		q.Set(k, v)
-	}
-
-	u.RawQuery = q.Encode()
-
-	return c.AuthorizationEndpoint.ResolveReference(&u).String()
+func (c *Client) basicToken() string {
+	b := []byte(c.Id + ":" + c.Secret)
+	return base64.StdEncoding.EncodeToString(b)
 }
