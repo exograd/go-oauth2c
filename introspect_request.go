@@ -26,7 +26,7 @@ type IntrospectRequest struct {
 }
 
 func (i *IntrospectRequest) Values() url.Values {
-	var q url.Values
+	q := url.Values{}
 
 	for k, v := range i.Extra {
 		q.Set(k, v)

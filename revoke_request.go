@@ -26,7 +26,7 @@ type RevokeRequest struct {
 }
 
 func (r *RevokeRequest) Values() url.Values {
-	var q url.Values
+	q := url.Values{}
 
 	for k, v := range r.Extra {
 		q.Set(k, v)

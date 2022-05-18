@@ -25,7 +25,7 @@ type TokenDeviceRequest struct {
 }
 
 func (t *TokenDeviceRequest) Values() url.Values {
-	var q url.Values
+	q := url.Values{}
 
 	for k, v := range t.Extra {
 		q.Set(k, v)

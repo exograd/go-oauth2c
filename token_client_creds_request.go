@@ -27,7 +27,7 @@ type TokenClientCredsRequest struct {
 }
 
 func (t *TokenClientCredsRequest) Values() url.Values {
-	var q url.Values
+	q := url.Values{}
 
 	for k, v := range t.Extra {
 		q.Set(k, v)
