@@ -1,6 +1,4 @@
-# Full featured OAuth2 Client
-
-## Introduction
+# OAuth2 client
 
 This repository contains Golang implementation of the client side OAuth2
 protocol defined by the [RFC 6749](https://tools.ietf.org/html/rfc6749).
