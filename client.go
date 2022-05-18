@@ -74,7 +74,7 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 		return nil, fmt.Errorf("invalid issuer: %w", err)
 	}
 
-	c := Client{Issuer: issuer, Id: id, Secret: secret}
+	c := Client{Issuer: issuer, Id: id, Secret: secret, conn: http.DefaultClient}
 
 	if o.Discover {
 		// TODO discover
