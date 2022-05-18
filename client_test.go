@@ -17,10 +17,17 @@
 package oauth2c
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -134,4 +141,54 @@ func TestAuthorizaURL(t *testing.T) {
 		RawQuery: "bar=foo+foo&client_id=the-best-client-id&foo=bar&redirect_uri=http%3A%2F%2Fwww.example.com%2Fcallback&response_type=code&scope=offline+foo+bar&state=fff",
 	}, u)
 
+}
+
+func TestToken(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/custom/token", r.URL.Path)
+		assert.Equal("application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
+
+		headerAuth := r.Header.Get("Authorization")
+		expectedToken :=
+			base64.StdEncoding.EncodeToString([]byte(ClientId + ":" + ClientSecret))
+
+		assert.Equal("Basic "+expectedToken, headerAuth)
+
+		body, err := ioutil.ReadAll(r.Body)
+		require.NoError(err)
+
+		values, err := url.ParseQuery(string(body))
+		require.NoError(err)
+
+		assert.Equal("42", values.Get("code"))
+		assert.Equal("https://example.com/callback", values.Get("redirect_uri"))
+		assert.Equal("bar", values.Get("foo"))
+		assert.Equal("qwerty", values.Get("state"))
+
+		w.Header().Set("Content-Type", "application/json")
+		payload, err := json.Marshal(map[string]string{"access_token": "foobar"})
+		require.NoError(err)
+		w.Write(payload)
+	}))
+	defer ts.Close()
+
+	options := &Options{TokenEndpoint: "/custom/token"}
+	client, err := NewClient(ts.URL, ClientId, ClientSecret, options)
+	require.NoError(err)
+
+	r, err := client.Token(context.Background(), GrantTypeAuthorizationCode, &TokenCodeRequest{
+		Code:        "42",
+		State:       "qwerty",
+		RedirectURI: "https://example.com/callback",
+		Extra: map[string]string{
+			"code": "no a code",
+			"foo":  "bar",
+		},
+	})
+
+	assert.NoError(err)
+	assert.Equal("foobar", r.AccessToken)
 }
