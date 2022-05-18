@@ -254,6 +254,50 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 	return nil, &e
 }
 
+func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
+	values := r.Values()
+	values.Set("token", t)
+
+	reqBody := bytes.NewBufferString(values.Encode())
+	req, err := http.NewRequestWithContext(ctx,
+		"POST", c.RevocationEndpoint.String(),
+		reqBody)
+
+	if err != nil {
+		return fmt.Errorf("cannot create the request: %w", err)
+	}
+
+	req.Header.Add("Authorization", "Basic "+c.basicToken())
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
+
+	resp, err := c.conn.Do(req)
+	if err != nil {
+		return fmt.Errorf("cannot execute the request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("cannot read response body: %w", err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+
+	var e Error
+	if err := json.Unmarshal(body, &e); err != nil {
+		return fmt.Errorf("cannot unmarshal error response"+
+			": %w", err)
+	}
+
+	e.HttpResponse = resp
+
+	return &e
+}
+
 func (c *Client) setAuthorizationEndpoint(s string) error {
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultAuthorizeURL)
