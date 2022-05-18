@@ -68,13 +68,6 @@ type Options struct {
 	DeviceAuthorizationEndpoint string
 }
 
-type AuthorizeRequest struct {
-	Scope       []string
-	State       string
-	RedirectURI string
-	Extra       map[string]string
-}
-
 func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 	issuer, err := url.ParseRequestURI(uri)
 	if err != nil {
