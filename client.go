@@ -147,7 +147,7 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", endpoint.String(),
+		http.MethodPost, endpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -207,7 +207,7 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", endpoint.String(),
+		http.MethodPost, endpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -263,7 +263,7 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", endpoint.String(),
+		http.MethodPost, endpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -308,7 +308,7 @@ func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse,
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", endpoint.String(),
+		http.MethodPost, endpoint.String(),
 		reqBody)
 
 	if err != nil {
