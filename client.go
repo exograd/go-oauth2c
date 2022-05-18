@@ -143,10 +143,11 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 	values := r.Values()
 	values.Set("grant_type", grantType)
 
+	endpoint := c.Issuer.ResolveReference(c.TokenEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", c.TokenEndpoint.String(),
+		"POST", endpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -198,9 +199,11 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 	values := r.Values()
 	values.Set("token", t)
 
+	endpoint := c.Issuer.ResolveReference(c.IntrospectionEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
+
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", c.IntrospectionEndpoint.String(),
+		"POST", endpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -252,9 +255,11 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 	values := r.Values()
 	values.Set("token", t)
 
+	endpoint := c.Issuer.ResolveReference(c.RevocationEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
+
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", c.RevocationEndpoint.String(),
+		"POST", endpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -295,9 +300,11 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse, error) {
 	values := r.Values()
 
+	endpoint := c.Issuer.ResolveReference(c.DeviceAuthorizationEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
+
 	req, err := http.NewRequestWithContext(ctx,
-		"POST", c.IntrospectionEndpoint.String(),
+		"POST", endpoint.String(),
 		reqBody)
 
 	if err != nil {
