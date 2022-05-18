@@ -20,7 +20,7 @@ You can execute the test suite with:
 If you find a bug or have any question, feel free to open a Github
 issue.
 
-Please not that we do not currently review or accept any contribution.
+Please note that we do not currently review or accept any contribution.
 
 ## Licence
 
