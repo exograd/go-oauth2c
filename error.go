@@ -16,17 +16,25 @@
 
 package oauth2c
 
+import "net/http"
+
 type Error struct {
 	// A single ASCII error code.
-	Error string `json:"error"`
+	Code string `json:"error"`
 
 	// Human-readable ASCII text providing additional information,
 	// used to assist the client developer in understanding the
 	// error that occurred.
-	ErrorDescription string `json:"error_description"`
+	Description string `json:"error_description"`
 
 	// A URI identifying a human-readable web page with information
 	// about the error, used to provide the client developer with
 	// additional information about the error
-	ErrorURI string `json:"error_uri"`
+	URI string `json:"error_uri"`
+
+	HttpResponse *http.Response
+}
+
+func (e *Error) Error() string {
+	return e.Code
 }
