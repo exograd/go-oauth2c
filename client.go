@@ -298,6 +298,59 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 	return &e
 }
 
+func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse, error) {
+	values := r.Values()
+
+	reqBody := bytes.NewBufferString(values.Encode())
+	req, err := http.NewRequestWithContext(ctx,
+		"POST", c.IntrospectionEndpoint.String(),
+		reqBody)
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot create the request: %w",
+			err)
+	}
+
+	req.Header.Add("Authorization", "Basic "+c.basicToken())
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
+
+	resp, err := c.conn.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("cannot execute the request: %w",
+			err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read response body: %w",
+			err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		var dr DeviceResponse
+
+		if err := json.Unmarshal(body, &dr); err != nil {
+			return nil, fmt.Errorf("cannot unmarshal"+
+				" introspect response: %w", err)
+		}
+
+		return &dr, nil
+	}
+
+	var e Error
+	if err := json.Unmarshal(body, &e); err != nil {
+		return nil, fmt.Errorf("cannot unmarshal error response"+
+			": %w", err)
+	}
+
+	e.HttpResponse = resp
+
+	return nil, &e
+}
+
 func (c *Client) setAuthorizationEndpoint(s string) error {
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultAuthorizeURL)
