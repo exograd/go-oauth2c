@@ -135,7 +135,8 @@ func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) *url.URL
 
 	u.RawQuery = q.Encode()
 
-	return c.AuthorizationEndpoint.ResolveReference(&u)
+	base := c.Issuer.ResolveReference(c.AuthorizationEndpoint)
+	return base.ResolveReference(&u)
 }
 
 func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*TokenResponse, error) {
