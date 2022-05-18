@@ -178,13 +178,26 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 			err)
 	}
 
-	var tokenResponse TokenResponse
-	if err := json.Unmarshal(body, &tokenResponse); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal token"+
-			" response: %w", err)
+	if resp.StatusCode == http.StatusOK {
+		var tr TokenResponse
+
+		if err := json.Unmarshal(body, &tr); err != nil {
+			return nil, fmt.Errorf("cannot unmarshal token"+
+				" response: %w", err)
+		}
+
+		return &tr, nil
 	}
 
-	return &tokenResponse, nil
+	var e Error
+	if err := json.Unmarshal(body, &e); err != nil {
+		return nil, fmt.Errorf("cannot unmarshal error response"+
+			": %w", err)
+	}
+
+	e.HttpResponse = resp
+
+	return nil, &e
 }
 
 func (c *Client) setAuthorizationEndpoint(s string) error {
