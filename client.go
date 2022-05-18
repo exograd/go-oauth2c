@@ -173,14 +173,18 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 			err)
 	}
 
-	if resp.StatusCode == http.StatusOK {
-		var tr TokenResponse
+	var tr TokenResponse
 
-		if err := json.Unmarshal(body, &tr); err != nil {
-			return nil, fmt.Errorf("cannot unmarshal token"+
-				" response: %w", err)
-		}
+	if err := json.Unmarshal(body, &tr); err != nil {
+		return nil, fmt.Errorf("cannot unmarshal token"+
+			" response: %w", err)
+	}
 
+	// Github OAuth2 server always returns 200, even for
+	// errors. Because of this, the only way to know if the response
+	// is an error is to check if the access token is an empty
+	// string.
+	if tr.AccessToken != "" {
 		return &tr, nil
 	}
 
