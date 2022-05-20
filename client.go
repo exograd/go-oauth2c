@@ -154,6 +154,8 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 	return &c, nil
 }
 
+// AuthorizeURL returns a URL to OAuth 2.0 provider's consent page that
+// asks for permissions for the required scopes explicitly.
 func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) *url.URL {
 	var u url.URL
 	q := u.Query()
