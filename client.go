@@ -66,6 +66,7 @@ type Options struct {
 	IntrospectionEndpoint       string
 	RevocationEndpoint          string
 	DeviceAuthorizationEndpoint string
+	DiscoveryEndpoint           string
 	HTTPClient                  *http.Client
 }
 
@@ -87,7 +88,10 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 	}
 
 	if o.Discover {
-		// TODO discover
+		if err := c.discover(o.DiscoveryEndpoint); err != nil {
+			return nil, fmt.Errorf("cannot discover OAuth2"+
+				" server: %w", err)
+		}
 		return &c, nil
 	}
 
@@ -445,4 +449,89 @@ func (c *Client) setDeviceAuthorizationEndpoint(s string) error {
 func (c *Client) basicToken() string {
 	b := []byte(c.Id + ":" + c.Secret)
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+func (c *Client) discover(s string) error {
+	endpoint := s
+	if endpoint == "" {
+		u := url.URL{
+			Path: "/.well-known/oauth-authorization-server",
+		}
+
+		endpoint = c.Issuer.ResolveReference(&u).String()
+	}
+
+	req, err := http.NewRequest(http.MethodGet, endpoint,
+		bytes.NewReader([]byte{}))
+	if err != nil {
+		return fmt.Errorf("cannot create the request: %w", err)
+	}
+
+	resp, err := c.conn.Do(req)
+	if err != nil {
+		return fmt.Errorf("cannot execute the request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("cannot read response body: %w", err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		var asm AuthorizationServerMetadata
+
+		if err := json.Unmarshal(body, &asm); err != nil {
+			return fmt.Errorf("cannot unmarshal discovery"+
+				" response: %w", err)
+		}
+
+		c.Discovery = &asm
+		err := c.setAuthorizationEndpoint(
+			c.Discovery.AuthorizationEndpoint)
+		if err != nil {
+			return fmt.Errorf("cannot decode authorization"+
+				" endpoint: %w", err)
+		}
+
+		err = c.setTokenEndpoint(c.Discovery.TokenEndpoint)
+		if err != nil {
+			return fmt.Errorf("cannot decode token"+
+				" endpoint: %w", err)
+		}
+
+		c.setIntrospectionEndpoint(
+			c.Discovery.IntrospectionEndpoint)
+		if err != nil {
+			return fmt.Errorf("cannot decode introspection"+
+				" endpoint: %w", err)
+		}
+
+		err = c.setRevokationEndpoint(
+			c.Discovery.RevocationEndpoint)
+		if err != nil {
+			return fmt.Errorf("cannot decode revokation"+
+				" endpoint: %w", err)
+		}
+
+		err = c.setDeviceAuthorizationEndpoint(
+			c.Discovery.DeviceAuthorizationEndpoint)
+		if err != nil {
+			return fmt.Errorf("cannot decode device"+
+				" authorization endpoint: %w", err)
+		}
+
+		return nil
+	}
+
+	var e Error
+	if err := json.Unmarshal(body, &e); err != nil {
+		return fmt.Errorf("cannot unmarshal error response: %w",
+			err)
+	}
+
+	e.HttpResponse = resp
+
+	return &e
 }
