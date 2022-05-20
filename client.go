@@ -47,28 +47,58 @@ var (
 )
 
 type Client struct {
-	Issuer                      *url.URL
-	Id                          string
-	Secret                      string
-	Discovery                   *AuthorizationServerMetadata
-	AuthorizationEndpoint       *url.URL
-	TokenEndpoint               *url.URL
-	IntrospectionEndpoint       *url.URL
-	RevocationEndpoint          *url.URL
+	Issuer *url.URL
+
+	// The client identifier.
+	Id string
+
+	// The client secret.
+	Secret string
+
+	//
+	Discovery *AuthorizationServerMetadata
+
+	// The endpoint to build the authorization request.
+	AuthorizationEndpoint *url.URL
+
+	// The endpoint used to get an access token.
+	TokenEndpoint *url.URL
+
+	// The endpoint used to introspect an access token.
+	IntrospectionEndpoint *url.URL
+
+	// The endpoint used to revoke an access token.
+	RevocationEndpoint *url.URL
+
+	// The endpoint used to create a device OAuth2 request.
 	DeviceAuthorizationEndpoint *url.URL
 
 	conn *http.Client
 }
 
 type Options struct {
-	Discover                    bool
-	AuthorizationEndpoint       string
-	TokenEndpoint               string
-	IntrospectionEndpoint       string
-	RevocationEndpoint          string
+	// Enable OAuth2 discovery.
+	Discover bool
+
+	// The endpoint to build the authorization request.
+	AuthorizationEndpoint string
+
+	// The endpoint used to get an access token.
+	TokenEndpoint string
+
+	// The endpoint used to introspect an access token.
+	IntrospectionEndpoint string
+
+	// The endpoint used to revoke an access token.
+	RevocationEndpoint string
+
+	// The endpoint used to create a device OAuth2 request.
 	DeviceAuthorizationEndpoint string
-	DiscoveryEndpoint           string
-	HTTPClient                  *http.Client
+
+	// The endpoint used to discover the OAuth2 server.
+	DiscoveryEndpoint string
+
+	HTTPClient *http.Client
 }
 
 func NewClient(uri, id, secret string, o *Options) (*Client, error) {

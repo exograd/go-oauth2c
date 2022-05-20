@@ -21,10 +21,20 @@ import (
 )
 
 type TokenCodeRequest struct {
-	Code        string
+	// The authorization code received from the authorization
+	// server.
+	Code string
+
+	// The redirect uri used in the authorization request.
 	RedirectURI string
-	State       string
-	Extra       map[string]string
+
+	// An opaque value used by the client to maintain state between
+	// the request and callback.
+	State string
+
+	// Custom parameters which is not part of the OAuth2
+	// specification.
+	Extra map[string]string
 }
 
 func (t *TokenCodeRequest) Values() url.Values {
