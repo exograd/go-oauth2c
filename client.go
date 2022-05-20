@@ -165,7 +165,8 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type",
+		"application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
@@ -224,7 +225,8 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type",
+		"application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
