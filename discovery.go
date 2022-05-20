@@ -117,9 +117,6 @@ type AuthorizationServerMetadata struct {
 	// (PKCE) code challenge methods supported by this authorization
 	// server.
 	CodeChallengeMethodsSupported []string `json:"code_challenge_methods_supported"`
-}
 
-func Discover(endpoint string) (*AuthorizationServerMetadata, error) {
-
-	return nil, nil
+	DeviceAuthorizationEndpoint string `json:"device_authorization_endpoint"`
 }
