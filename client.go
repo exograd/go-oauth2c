@@ -88,7 +88,6 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 			return nil, fmt.Errorf("cannot discover OAuth2"+
 				" server: %w", err)
 		}
-		return &c, nil
 	}
 
 	err = c.setAuthorizationEndpoint(o.AuthorizationEndpoint)
@@ -145,19 +144,17 @@ func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) *url.URL
 
 	u.RawQuery = q.Encode()
 
-	base := c.Issuer.ResolveReference(c.AuthorizationEndpoint)
-	return base.ResolveReference(&u)
+	return c.AuthorizationEndpoint.ResolveReference(&u)
 }
 
 func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*TokenResponse, error) {
 	values := r.Values()
 	values.Set("grant_type", grantType)
 
-	endpoint := c.Issuer.ResolveReference(c.TokenEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodPost, endpoint.String(),
+		http.MethodPost, c.TokenEndpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -213,11 +210,10 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 	values := r.Values()
 	values.Set("token", t)
 
-	endpoint := c.Issuer.ResolveReference(c.IntrospectionEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodPost, endpoint.String(),
+		http.MethodPost, c.IntrospectionEndpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -269,11 +265,10 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 	values := r.Values()
 	values.Set("token", t)
 
-	endpoint := c.Issuer.ResolveReference(c.RevocationEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodPost, endpoint.String(),
+		http.MethodPost, c.RevocationEndpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -314,11 +309,10 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse, error) {
 	values := r.Values()
 
-	endpoint := c.Issuer.ResolveReference(c.DeviceAuthorizationEndpoint)
 	reqBody := bytes.NewBufferString(values.Encode())
 
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodPost, endpoint.String(),
+		http.MethodPost, c.DeviceAuthorizationEndpoint.String(),
 		reqBody)
 
 	if err != nil {
@@ -367,6 +361,13 @@ func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse,
 }
 
 func (c *Client) setAuthorizationEndpoint(s string) error {
+	if s == "" &&
+		c.Discovery != nil &&
+		c.Discovery.AuthorizationEndpoint != "" {
+
+		s = c.Discovery.AuthorizationEndpoint
+	}
+
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultAuthorizeURL)
 		c.AuthorizationEndpoint = u
@@ -378,11 +379,20 @@ func (c *Client) setAuthorizationEndpoint(s string) error {
 	if err != nil {
 		return err
 	}
-	c.AuthorizationEndpoint = u
+
+	c.AuthorizationEndpoint = c.Issuer.ResolveReference(u)
+
 	return nil
 }
 
 func (c *Client) setTokenEndpoint(s string) error {
+	if s == "" &&
+		c.Discovery != nil &&
+		c.Discovery.TokenEndpoint != "" {
+
+		s = c.Discovery.TokenEndpoint
+	}
+
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultTokenURL)
 		c.TokenEndpoint = u
@@ -393,11 +403,20 @@ func (c *Client) setTokenEndpoint(s string) error {
 	if err != nil {
 		return err
 	}
-	c.TokenEndpoint = u
+
+	c.TokenEndpoint = c.Issuer.ResolveReference(u)
+
 	return nil
 }
 
 func (c *Client) setIntrospectionEndpoint(s string) error {
+	if s == "" &&
+		c.Discovery != nil &&
+		c.Discovery.IntrospectionEndpoint != "" {
+
+		s = c.Discovery.IntrospectionEndpoint
+	}
+
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultIntrospectURL)
 		c.IntrospectionEndpoint = u
@@ -408,11 +427,20 @@ func (c *Client) setIntrospectionEndpoint(s string) error {
 	if err != nil {
 		return err
 	}
-	c.IntrospectionEndpoint = u
+
+	c.IntrospectionEndpoint = c.Issuer.ResolveReference(u)
+
 	return nil
 }
 
 func (c *Client) setRevokationEndpoint(s string) error {
+	if s == "" &&
+		c.Discovery != nil &&
+		c.Discovery.RevocationEndpoint != "" {
+
+		s = c.Discovery.RevocationEndpoint
+	}
+
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultRevokeURL)
 		c.RevocationEndpoint = u
@@ -423,11 +451,20 @@ func (c *Client) setRevokationEndpoint(s string) error {
 	if err != nil {
 		return err
 	}
-	c.RevocationEndpoint = u
+
+	c.RevocationEndpoint = c.Issuer.ResolveReference(u)
+
 	return nil
 }
 
 func (c *Client) setDeviceAuthorizationEndpoint(s string) error {
+	if s == "" &&
+		c.Discovery != nil &&
+		c.Discovery.DeviceAuthorizationEndpoint != "" {
+
+		s = c.Discovery.DeviceAuthorizationEndpoint
+	}
+
 	if s == "" {
 		u := c.Issuer.ResolveReference(defaultDeviceURL)
 		c.DeviceAuthorizationEndpoint = u
@@ -438,7 +475,9 @@ func (c *Client) setDeviceAuthorizationEndpoint(s string) error {
 	if err != nil {
 		return err
 	}
-	c.DeviceAuthorizationEndpoint = u
+
+	c.DeviceAuthorizationEndpoint = c.Issuer.ResolveReference(u)
+
 	return nil
 }
 
@@ -484,39 +523,6 @@ func (c *Client) discover(s string) error {
 		}
 
 		c.Discovery = &asm
-		err := c.setAuthorizationEndpoint(
-			c.Discovery.AuthorizationEndpoint)
-		if err != nil {
-			return fmt.Errorf("cannot decode authorization"+
-				" endpoint: %w", err)
-		}
-
-		err = c.setTokenEndpoint(c.Discovery.TokenEndpoint)
-		if err != nil {
-			return fmt.Errorf("cannot decode token"+
-				" endpoint: %w", err)
-		}
-
-		c.setIntrospectionEndpoint(
-			c.Discovery.IntrospectionEndpoint)
-		if err != nil {
-			return fmt.Errorf("cannot decode introspection"+
-				" endpoint: %w", err)
-		}
-
-		err = c.setRevokationEndpoint(
-			c.Discovery.RevocationEndpoint)
-		if err != nil {
-			return fmt.Errorf("cannot decode revokation"+
-				" endpoint: %w", err)
-		}
-
-		err = c.setDeviceAuthorizationEndpoint(
-			c.Discovery.DeviceAuthorizationEndpoint)
-		if err != nil {
-			return fmt.Errorf("cannot decode device"+
-				" authorization endpoint: %w", err)
-		}
 
 		return nil
 	}
