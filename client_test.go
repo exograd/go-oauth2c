@@ -143,7 +143,7 @@ func TestAuthorizaURL(t *testing.T) {
 
 }
 
-func TestToken(t *testing.T) {
+func TestValidTokenRequest(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
 
@@ -169,7 +169,11 @@ func TestToken(t *testing.T) {
 		assert.Equal("qwerty", values.Get("state"))
 
 		w.Header().Set("Content-Type", "application/json")
-		payload, err := json.Marshal(map[string]string{"access_token": "foobar"})
+		payload, err := json.Marshal(map[string]interface{}{
+			"access_token": "foobar",
+			"token_type":   "bearer",
+			"expires_in":   3600,
+		})
 		require.NoError(err)
 		w.Write(payload)
 	}))
@@ -191,4 +195,67 @@ func TestToken(t *testing.T) {
 
 	assert.NoError(err)
 	assert.Equal("foobar", r.AccessToken)
+	assert.Equal("bearer", r.TokenType)
+	assert.Equal(int64(3600), r.ExpiresIn)
+}
+
+func TestInvalidTokenRequest(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/custom/token", r.URL.Path)
+		assert.Equal("application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
+
+		headerAuth := r.Header.Get("Authorization")
+		expectedToken :=
+			base64.StdEncoding.EncodeToString([]byte(ClientId + ":" + ClientSecret))
+
+		assert.Equal("Basic "+expectedToken, headerAuth)
+
+		body, err := ioutil.ReadAll(r.Body)
+		require.NoError(err)
+
+		values, err := url.ParseQuery(string(body))
+		require.NoError(err)
+
+		assert.Equal("42", values.Get("code"))
+		assert.Equal("https://example.com/callback", values.Get("redirect_uri"))
+		assert.Equal("bar", values.Get("foo"))
+		assert.Equal("qwerty", values.Get("state"))
+
+		w.Header().Set("Content-Type", "application/json")
+		payload, err := json.Marshal(map[string]interface{}{
+			"error":             "invalid_request",
+			"error_description": "a simple description of the error",
+			"error_uri":         "http://example.com/docs/error#invalid_request",
+		})
+		require.NoError(err)
+		w.Write(payload)
+	}))
+	defer ts.Close()
+
+	options := &Options{TokenEndpoint: "/custom/token"}
+	client, err := NewClient(ts.URL, ClientId, ClientSecret, options)
+	require.NoError(err)
+
+	r, err := client.Token(context.Background(), GrantTypeAuthorizationCode, &TokenCodeRequest{
+		Code:        "42",
+		State:       "qwerty",
+		RedirectURI: "https://example.com/callback",
+		Extra: map[string]string{
+			"code": "no a code",
+			"foo":  "bar",
+		},
+	})
+
+	assert.Nil(r)
+	assert.Error(err)
+
+	oauth2Error, ok := err.(*Error)
+	require.True(ok)
+
+	assert.Equal("invalid_request", oauth2Error.Code)
+	assert.Equal("a simple description of the error", oauth2Error.Description)
+	assert.Equal("http://example.com/docs/error#invalid_request", oauth2Error.URI)
 }
