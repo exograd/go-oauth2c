@@ -113,7 +113,8 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 			" %w", err)
 	}
 
-	err = c.setDeviceAuthorizationEndpoint(o.DeviceAuthorizationEndpoint)
+	err = c.setDeviceAuthorizationEndpoint(
+		o.DeviceAuthorizationEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("invalid device authorization "+
 			" endpoint: %w", err)
@@ -276,7 +277,8 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type",
+		"application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
@@ -321,7 +323,8 @@ func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse,
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type",
+		"application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
