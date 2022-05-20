@@ -21,8 +21,13 @@ import (
 )
 
 type IntrospectRequest struct {
+	// A hint about the type of the token submitted for
+	// introspection.
 	TokenTypeHint string
-	Extra         map[string]string
+
+	// Custom parameters which is not part of the OAuth2
+	// specification.
+	Extra map[string]string
 }
 
 func (i *IntrospectRequest) Values() url.Values {
