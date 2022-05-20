@@ -17,9 +17,21 @@
 package oauth2c
 
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
+	// AccessToken is the token that authorizes and authenticates the
+	// requests.
+	AccessToken string `json:"access_token"`
+
+	// TokenType is the type of token (e.g. Bearer).
+	TokenType string `json:"token_type"`
+
+	// Expiry is the optional expiration time of the access token.
+	ExpiresIn int64 `json:"expires_in"`
+
+	// RefreshToken is a token that's used by the application (as
+	// opposed to the user) to refresh the access token if it
+	// expires.
 	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
+
+	// Scope associated with the access token.
+	Scope string `json:"scope"`
 }
