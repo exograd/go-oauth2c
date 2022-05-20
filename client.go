@@ -66,6 +66,7 @@ type Options struct {
 	IntrospectionEndpoint       string
 	RevocationEndpoint          string
 	DeviceAuthorizationEndpoint string
+	HTTPClient                  *http.Client
 }
 
 func NewClient(uri, id, secret string, o *Options) (*Client, error) {
@@ -74,7 +75,16 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 		return nil, fmt.Errorf("invalid issuer: %w", err)
 	}
 
-	c := Client{Issuer: issuer, Id: id, Secret: secret, conn: http.DefaultClient}
+	c := Client{
+		Issuer: issuer,
+		Id:     id,
+		Secret: secret,
+	}
+
+	c.conn = http.DefaultClient
+	if o.HTTPClient != nil {
+		c.conn = o.HTTPClient
+	}
 
 	if o.Discover {
 		// TODO discover
