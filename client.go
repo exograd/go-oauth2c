@@ -29,8 +29,9 @@ import (
 )
 
 const (
-	CodeResponseType           = "code"
-	TokenResponseType          = "token"
+	ResponseTypeCode  = "code"
+	ResponseTypeToken = "token"
+
 	GrantTypeAuthorizationCode = "authorization_code"
 	GrantTypeImplicit          = "token"
 	GrantTypePasswordCreds     = "password"

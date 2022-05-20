@@ -110,7 +110,7 @@ func TestAuthorizaURL(t *testing.T) {
 
 	request := &AuthorizeRequest{}
 
-	u := client.AuthorizeURL(CodeResponseType, request)
+	u := client.AuthorizeURL(ResponseTypeCode, request)
 	assert.Equal(&url.URL{
 		Scheme:   "https",
 		Host:     "issuer.example.org",
@@ -118,7 +118,7 @@ func TestAuthorizaURL(t *testing.T) {
 		RawQuery: "client_id=the-best-client-id&redirect_uri=&response_type=code",
 	}, u)
 
-	u = client.AuthorizeURL(TokenResponseType, &AuthorizeRequest{})
+	u = client.AuthorizeURL(ResponseTypeToken, &AuthorizeRequest{})
 	assert.Equal(&url.URL{
 		Scheme:   "https",
 		Host:     "issuer.example.org",
@@ -133,7 +133,7 @@ func TestAuthorizaURL(t *testing.T) {
 		"foo": "bar",
 		"bar": "foo foo",
 	}
-	u = client.AuthorizeURL(CodeResponseType, request)
+	u = client.AuthorizeURL(ResponseTypeCode, request)
 	assert.Equal(&url.URL{
 		Scheme:   "https",
 		Host:     "issuer.example.org",
