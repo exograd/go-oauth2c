@@ -116,15 +116,13 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 
 	if o.Discover {
 		if err := c.discover(o.DiscoveryEndpoint); err != nil {
-			return nil, fmt.Errorf("cannot discover OAuth2"+
-				" server: %w", err)
+			return nil, fmt.Errorf("cannot discover oauth2 server: %w", err)
 		}
 	}
 
 	err = c.setAuthorizationEndpoint(o.AuthorizationEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("invalid authorization endpoint:"+
-			" %w", err)
+		return nil, fmt.Errorf("invalid authorization endpoint: %w", err)
 	}
 
 	err = c.setTokenEndpoint(o.TokenEndpoint)
@@ -134,14 +132,12 @@ func NewClient(uri, id, secret string, o *Options) (*Client, error) {
 
 	err = c.setIntrospectionEndpoint(o.IntrospectionEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("invalid introspection endpoint:"+
-			" %w", err)
+		return nil, fmt.Errorf("invalid introspection endpoint: %w", err)
 	}
 
 	err = c.setRevokationEndpoint(o.RevocationEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("invalid revokation endpoint:"+
-			" %w", err)
+		return nil, fmt.Errorf("invalid revokation endpoint: %w", err)
 	}
 
 	err = c.setDeviceAuthorizationEndpoint(
@@ -192,34 +188,29 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 		reqBody)
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot create the request: %w",
-			err)
+		return nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type",
-		"application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("cannot execute the request: %w",
-			err)
+		return nil, fmt.Errorf("cannot execute request: %w", err)
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read response body: %w",
-			err)
+		return nil, fmt.Errorf("cannot read response body: %w", err)
 	}
 
 	var tr TokenResponse
 
 	if err := json.Unmarshal(body, &tr); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal token"+
-			" response: %w", err)
+		return nil, fmt.Errorf("cannot unmarshal token response: %w", err)
 	}
 
 	// Github OAuth2 server always returns 200, even for
@@ -252,19 +243,16 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 		reqBody)
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot create the request: %w",
-			err)
+		return nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type",
-		"application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("cannot execute the request: %w",
-			err)
+		return nil, fmt.Errorf("cannot execute request: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -288,8 +276,7 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 
 	var e Error
 	if err := json.Unmarshal(body, &e); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal error response"+
-			": %w", err)
+		return nil, fmt.Errorf("cannot unmarshal error response: %w", err)
 	}
 
 	e.HTTPResponse = resp
@@ -308,17 +295,16 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 		reqBody)
 
 	if err != nil {
-		return fmt.Errorf("cannot create the request: %w", err)
+		return fmt.Errorf("cannot create request: %w", err)
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type",
-		"application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
 	if err != nil {
-		return fmt.Errorf("cannot execute the request: %w", err)
+		return fmt.Errorf("cannot execute request: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -353,27 +339,23 @@ func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse,
 		reqBody)
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot create the request: %w",
-			err)
+		return nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	req.Header.Add("Authorization", "Basic "+c.basicToken())
-	req.Header.Add("Content-Type",
-		"application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := c.conn.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("cannot execute the request: %w",
-			err)
+		return nil, fmt.Errorf("cannot execute request: %w", err)
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read response body: %w",
-			err)
+		return nil, fmt.Errorf("cannot read response body: %w", err)
 	}
 
 	if resp.StatusCode == http.StatusOK {
@@ -537,12 +519,12 @@ func (c *Client) discover(s string) error {
 	req, err := http.NewRequest(http.MethodGet, endpoint,
 		bytes.NewReader([]byte{}))
 	if err != nil {
-		return fmt.Errorf("cannot create the request: %w", err)
+		return fmt.Errorf("cannot create request: %w", err)
 	}
 
 	resp, err := c.conn.Do(req)
 	if err != nil {
-		return fmt.Errorf("cannot execute the request: %w", err)
+		return fmt.Errorf("cannot execute request: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -567,8 +549,7 @@ func (c *Client) discover(s string) error {
 
 	var e Error
 	if err := json.Unmarshal(body, &e); err != nil {
-		return fmt.Errorf("cannot unmarshal error response: %w",
-			err)
+		return fmt.Errorf("cannot unmarshal error response: %w", err)
 	}
 
 	e.HTTPResponse = resp
