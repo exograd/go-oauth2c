@@ -38,7 +38,11 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return e.Code
+	if e.Description == "" {
+		return e.Code
+	}
+
+	return e.Code + ": " + e.Description
 }
 
 func GetRequestError(r *http.Request) *Error {
