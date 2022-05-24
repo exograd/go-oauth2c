@@ -111,7 +111,7 @@ type AuthorizationServerMetadata struct {
 	// the signature on the JWT used to authenticate the client at
 	// the introspection endpoint for the "private_key_jwt" and
 	// "client_secret_jwt" authentication methods.
-	IntrospectionEndpointAuthSigningAlgValuesSupported []string `json":introspection_endpoint_auth_signing_alg_values_supported"`
+	IntrospectionEndpointAuthSigningAlgValuesSupported []string `json:"introspection_endpoint_auth_signing_alg_values_supported"`
 
 	// JSON array containing a list of Proof Key for Code Exchange
 	// (PKCE) code challenge methods supported by this authorization
