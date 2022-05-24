@@ -236,7 +236,7 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 			": %w", err)
 	}
 
-	e.HttpResponse = resp
+	e.HTTPResponse = resp
 
 	return nil, &e
 }
@@ -292,7 +292,7 @@ func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest)
 			": %w", err)
 	}
 
-	e.HttpResponse = resp
+	e.HTTPResponse = resp
 
 	return nil, &e
 }
@@ -338,7 +338,7 @@ func (c *Client) Revoke(ctx context.Context, t string, r *RevokeRequest) error {
 			": %w", err)
 	}
 
-	e.HttpResponse = resp
+	e.HTTPResponse = resp
 
 	return &e
 }
@@ -393,7 +393,7 @@ func (c *Client) Device(ctx context.Context, r *DeviceRequest) (*DeviceResponse,
 			": %w", err)
 	}
 
-	e.HttpResponse = resp
+	e.HTTPResponse = resp
 
 	return nil, &e
 }
@@ -571,7 +571,7 @@ func (c *Client) discover(s string) error {
 			err)
 	}
 
-	e.HttpResponse = resp
+	e.HTTPResponse = resp
 
 	return &e
 }
