@@ -41,7 +41,7 @@ func (e *Error) Error() string {
 	return e.Code
 }
 
-func GetRequestError(r *http.Request) error {
+func GetRequestError(r *http.Request) *Error {
 	q := r.URL.Query()
 
 	if q.Get("error") == "" {
