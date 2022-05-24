@@ -34,7 +34,7 @@ type Error struct {
 	// additional information about the error
 	URI string `json:"error_uri"`
 
-	HttpResponse *http.Response
+	HTTPResponse *http.Response
 }
 
 func (e *Error) Error() string {
