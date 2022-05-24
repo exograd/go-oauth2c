@@ -207,29 +207,30 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 		return nil, fmt.Errorf("cannot read response body: %w", err)
 	}
 
+	// Some OAuth2 server such as GitHub return a 200 status code even though
+	// the request failed. We assume that a missing or empty access token
+	// means that the request failed somehow.
+
 	var tr TokenResponse
+	err = json.Unmarshal(body, &tr)
 
-	if err := json.Unmarshal(body, &tr); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal token response: %w", err)
+	if err != nil || tr.AccessToken == "" {
+		var e Error
+		if err := json.Unmarshal(body, &e); err != nil || e.Code == "" {
+			if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+				return nil, fmt.Errorf("request failed with status %d: %s",
+					resp.StatusCode, body)
+			}
+
+			return nil, fmt.Errorf("request failed without error data")
+		}
+
+		e.HTTPResponse = resp
+
+		return nil, &e
 	}
 
-	// Github OAuth2 server always returns 200, even for
-	// errors. Because of this, the only way to know if the response
-	// is an error is to check if the access token is an empty
-	// string.
-	if tr.AccessToken != "" {
-		return &tr, nil
-	}
-
-	var e Error
-	if err := json.Unmarshal(body, &e); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal error response"+
-			": %w", err)
-	}
-
-	e.HTTPResponse = resp
-
-	return nil, &e
+	return &tr, nil
 }
 
 func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest) (*IntrospectResponse, error) {

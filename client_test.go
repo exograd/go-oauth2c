@@ -193,10 +193,11 @@ func TestValidTokenRequest(t *testing.T) {
 		},
 	})
 
-	assert.NoError(err)
-	assert.Equal("foobar", r.AccessToken)
-	assert.Equal("bearer", r.TokenType)
-	assert.Equal(int64(3600), r.ExpiresIn)
+	if assert.NoError(err) {
+		assert.Equal("foobar", r.AccessToken)
+		assert.Equal("bearer", r.TokenType)
+		assert.Equal(int64(3600), r.ExpiresIn)
+	}
 }
 
 func TestInvalidTokenRequest(t *testing.T) {
@@ -239,23 +240,28 @@ func TestInvalidTokenRequest(t *testing.T) {
 	client, err := NewClient(ts.URL, ClientId, ClientSecret, options)
 	require.NoError(err)
 
-	r, err := client.Token(context.Background(), GrantTypeAuthorizationCode, &TokenCodeRequest{
-		Code:        "42",
-		State:       "qwerty",
-		RedirectURI: "https://example.com/callback",
-		Extra: map[string]string{
-			"code": "no a code",
-			"foo":  "bar",
-		},
-	})
+	r, err := client.Token(context.Background(), GrantTypeAuthorizationCode,
+		&TokenCodeRequest{
+			Code:        "42",
+			State:       "qwerty",
+			RedirectURI: "https://example.com/callback",
+			Extra: map[string]string{
+				"code": "no a code",
+				"foo":  "bar",
+			},
+		})
 
-	assert.Nil(r)
-	assert.Error(err)
+	if assert.Error(err) {
+		assert.Nil(r)
 
-	oauth2Error, ok := err.(*Error)
-	require.True(ok)
+		var oauth2Error *Error
 
-	assert.Equal("invalid_request", oauth2Error.Code)
-	assert.Equal("a simple description of the error", oauth2Error.Description)
-	assert.Equal("http://example.com/docs/error#invalid_request", oauth2Error.URI)
+		if assert.ErrorAs(err, &oauth2Error) {
+			assert.Equal("invalid_request", oauth2Error.Code)
+			assert.Equal("a simple description of the error",
+				oauth2Error.Description)
+			assert.Equal("http://example.com/docs/error#invalid_request",
+				oauth2Error.URI)
+		}
+	}
 }
