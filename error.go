@@ -16,7 +16,9 @@
 
 package oauth2c
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Error struct {
 	// A single ASCII error code.
@@ -37,4 +39,18 @@ type Error struct {
 
 func (e *Error) Error() string {
 	return e.Code
+}
+
+func GetRequestError(r *http.Request) error {
+	q := r.URL.Query()
+
+	if q.Get("error") == "" {
+		return nil
+	}
+
+	return &Error{
+		Code:        q.Get("error"),
+		Description: q.Get("error_description"),
+		URI:         q.Get("error_uri"),
+	}
 }
