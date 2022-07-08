@@ -178,6 +178,41 @@ func (c *Client) AuthorizeURL(responseType string, r *AuthorizeRequest) *url.URL
 }
 
 func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*TokenResponse, error) {
+	res, err := c.Token2(ctx, grantType, r)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read response body: %w", err)
+	}
+
+	// Some OAuth2 server such as GitHub return a 200 status code even though
+	// the request failed. We assume that a missing or empty access token
+	// means that the request failed somehow.
+
+	var tr TokenResponse
+
+	err = json.Unmarshal(body, &tr)
+
+	if err != nil || tr.AccessToken == "" {
+		var e Error
+
+		if err := json.Unmarshal(body, &e); err == nil && e.Code != "" {
+			e.HTTPResponse = res
+			return nil, &e
+		}
+
+		return nil, fmt.Errorf("request failed with status %d: %s",
+			res.StatusCode, body)
+	}
+
+	return &tr, nil
+}
+
+func (c *Client) Token2(ctx context.Context, grantType string, r TokenRequest) (*http.Response, error) {
 	values := r.Values()
 	values.Set("grant_type", grantType)
 
@@ -195,42 +230,12 @@ func (c *Client) Token(ctx context.Context, grantType string, r TokenRequest) (*
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
-	resp, err := c.conn.Do(req)
+	res, err := c.conn.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("cannot execute request: %w", err)
+		return nil, fmt.Errorf("cannot send request: %w", err)
 	}
 
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read response body: %w", err)
-	}
-
-	// Some OAuth2 server such as GitHub return a 200 status code even though
-	// the request failed. We assume that a missing or empty access token
-	// means that the request failed somehow.
-
-	var tr TokenResponse
-	err = json.Unmarshal(body, &tr)
-
-	if err != nil || tr.AccessToken == "" {
-		var e Error
-		if err := json.Unmarshal(body, &e); err != nil || e.Code == "" {
-			if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-				return nil, fmt.Errorf("request failed with status %d: %s",
-					resp.StatusCode, body)
-			}
-
-			return nil, fmt.Errorf("request failed without error data")
-		}
-
-		e.HTTPResponse = resp
-
-		return nil, &e
-	}
-
-	return &tr, nil
+	return res, nil
 }
 
 func (c *Client) Introspect(ctx context.Context, t string, r *IntrospectRequest) (*IntrospectResponse, error) {
