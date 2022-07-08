@@ -1,41 +1,8 @@
 # OAuth2 client
-
-This repository contains Golang implementation of the client side OAuth2
+This repository contains an Golang implementation of the OAuth2 client
 protocol defined by the [RFC 6749](https://tools.ietf.org/html/rfc6749).
 
-## Build
-
-You can build the library with:
-
-    make build
-
-## Test
-
-You can execute the test suite with:
-
-    make test
-
 ## Contact
-
-If you find a bug or have any question, feel free to open a Github
-issue.
+If you find a bug or have any question, feel free to open a Github issue.
 
 Please note that we do not currently review or accept any contribution.
-
-## Licence
-
-Released under the ISC license.
-
-Copyright (c) 2022 Exograd SAS.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
